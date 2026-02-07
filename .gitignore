@@ -71,3 +71,7 @@ verify_*.py
 # ignore claude files
 .claude/
 CLAUDE.md
+
+
+/deploy/*
+!/deploy/docker-compose.yml

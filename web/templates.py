@@ -615,6 +615,7 @@ def render_toast(message: str, toast_type: str = "success") -> str:
 def render_config_page(
     stock_list: str,
     env_filename: str,
+    pause_scheduled_task: bool,
     message: Optional[str] = None
 ) -> bytes:
     """
@@ -956,6 +957,8 @@ def render_config_page(
             rows="4" 
             placeholder="例如: 600519, 000001 (逗号或换行分隔)"
         >{safe_value}</textarea>
+        <br>
+        <label><input type="checkbox" name="pause_scheduled_task" value="true" {"checked" if pause_scheduled_task else ""}>暂停定时任务</label>
       </div>
       <button type="submit">💾 保存</button>
     </form>

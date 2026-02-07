@@ -382,7 +382,10 @@ def main() -> int:
     if start_webui:
         try:
             from webui import run_server_in_thread
-            run_server_in_thread(host=config.webui_host, port=config.webui_port)
+            run_server_in_thread(
+                host=config.webui_host, port=config.webui_port,
+                username=config.webui_username, password=config.webui_password,
+            )
             bot_clients_started = True
         except Exception as e:
             logger.error(f"启动 WebUI 失败: {e}")
@@ -469,12 +472,15 @@ def main() -> int:
             from src.scheduler import run_with_schedule
             
             def scheduled_task():
+                if config.pause_scheduled_task:
+                    logger.warning("定时任务已暂停，跳过本次执行")
+                    return
                 run_full_analysis(config, args, stock_codes)
             
             run_with_schedule(
                 task=scheduled_task,
                 schedule_time=config.schedule_time,
-                run_immediately=True  # 启动时先执行一次
+                run_immediately=False  # 启动时先执行一次
             )
             return 0
         

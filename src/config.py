@@ -183,7 +183,9 @@ class Config:
     webui_enabled: bool = False
     webui_host: str = "127.0.0.1"
     webui_port: int = 8000
-    
+    webui_username: str = ""
+    webui_password: str = ""
+
     # === 机器人配置 ===
     bot_enabled: bool = True              # 是否启用机器人功能
     bot_command_prefix: str = "/"         # 命令前缀
@@ -212,7 +214,10 @@ class Config:
     
     # Discord 机器人扩展配置
     discord_bot_status: str = "A股智能分析 | /help"  # 机器人状态信息
-    
+
+    # 是否暂停定时任务（用于临时禁用定时任务，不影响手动触发）
+    pause_scheduled_task: bool = False
+
     # 单例实例存储
     _instance: Optional['Config'] = None
     
@@ -380,6 +385,8 @@ class Config:
             webui_enabled=os.getenv('WEBUI_ENABLED', 'false').lower() == 'true',
             webui_host=os.getenv('WEBUI_HOST', '127.0.0.1'),
             webui_port=int(os.getenv('WEBUI_PORT', '8000')),
+            webui_username=os.getenv('WEBUI_USERNAME', '').strip(),
+            webui_password=os.getenv('WEBUI_PASSWORD', '').strip(),
             # 机器人配置
             bot_enabled=os.getenv('BOT_ENABLED', 'true').lower() == 'true',
             bot_command_prefix=os.getenv('BOT_COMMAND_PREFIX', '/'),

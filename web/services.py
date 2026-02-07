@@ -21,6 +21,7 @@ from typing import Optional, Dict, Any, List, Union
 
 from src.enums import ReportType
 from src.storage import get_db
+from src.config import get_config
 from bot.models import BotMessage
 
 logger = logging.getLogger(__name__)
@@ -83,7 +84,17 @@ class ConfigService:
     def get_env_filename(self) -> str:
         """获取 .env 文件名"""
         return os.path.basename(self.env_path)
-    
+
+    def get_pause_scheduled_task(self) -> bool:
+        """获取是否暂停定时任务"""
+        config = get_config()
+        return config.pause_scheduled_task
+
+    def set_pause_scheduled_task(self, value: bool) -> None:
+        """设置是否暂停定时任务"""
+        config = get_config()
+        config.pause_scheduled_task = value
+
     def _extract_stock_list(self, env_text: str) -> str:
         """从环境文件中提取 STOCK_LIST 值"""
         for line in env_text.splitlines():

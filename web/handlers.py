@@ -104,7 +104,8 @@ class PageHandler:
         """处理首页请求 GET /"""
         stock_list = self.config_service.get_stock_list()
         env_filename = self.config_service.get_env_filename()
-        body = render_config_page(stock_list, env_filename)
+        pause_scheduled_task = self.config_service.get_pause_scheduled_task()
+        body = render_config_page(stock_list, env_filename, pause_scheduled_task)
         return HtmlResponse(body)
     
     def handle_update(self, form_data: Dict[str, list]) -> Response:
@@ -117,7 +118,9 @@ class PageHandler:
         stock_list = form_data.get("stock_list", [""])[0]
         normalized = self.config_service.set_stock_list(stock_list)
         env_filename = self.config_service.get_env_filename()
-        body = render_config_page(normalized, env_filename, message="已保存")
+        pause_scheduled_task = bool(form_data.get("pause_scheduled_task", [""])[0])
+        self.config_service.set_pause_scheduled_task(pause_scheduled_task)
+        body = render_config_page(normalized, env_filename, pause_scheduled_task, message="已保存")
         return HtmlResponse(body)
 
 

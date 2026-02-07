@@ -16,6 +16,8 @@ import logging
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional, Type
+import base64
+import binascii
 
 from web.router import Router, get_router
 
@@ -32,18 +34,58 @@ class WebRequestHandler(BaseHTTPRequestHandler):
     
     将请求分发到路由器处理
     """
-    
+
     # 类级别的路由器引用
     router: Router = None  # type: ignore
-    
+    username: str = ""
+    password: str = ""
+
+    def do_AUTHHEAD(self):
+        """发送 401 响应及 WWW-Authenticate 头"""
+        self.send_response(401)
+        self.send_header('WWW-Authenticate', 'Basic realm="Restricted Area"')
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def authenticate(self):
+        """检查 Authorization 头是否有效"""
+        if not self.username:
+            return True
+        auth_header = self.headers.get('Authorization')
+        if not auth_header:
+            return False
+
+        if not auth_header.startswith('Basic '):
+            return False
+
+        try:
+            # 解码 Base64 编码的凭证
+            credentials = base64.b64decode(auth_header[6:]).decode('utf-8')
+        except (binascii.Error, UnicodeDecodeError):
+            return False
+
+        username, separator, password = credentials.partition(':')
+        if separator != ':':
+            return False
+
+        return username == self.username and password == self.password
+
     def do_GET(self) -> None:
         """处理 GET 请求"""
+        if not self.authenticate():
+            self.do_AUTHHEAD()
+            self.wfile.write(b'Unauthorized access')
+            return
         self.router.dispatch(self, "GET")
     
     def do_POST(self) -> None:
         """处理 POST 请求"""
+        if not self.authenticate():
+            self.do_AUTHHEAD()
+            self.wfile.write(b'Unauthorized access')
+            return
         self.router.dispatch_post(self)
-    
+
     def log_message(self, fmt: str, *args) -> None:
         """自定义日志格式（使用 logging 而非 stderr）"""
         # 可以取消注释以启用请求日志
@@ -75,7 +117,9 @@ class WebServer:
         self,
         host: str = "127.0.0.1",
         port: int = 8000,
-        router: Optional[Router] = None
+        router: Optional[Router] = None,
+        username: str = "",
+        password: str = ""
     ):
         """
         初始化 Web 服务器
@@ -88,6 +132,8 @@ class WebServer:
         self.host = host
         self.port = port
         self.router = router or get_router()
+        self.username = username
+        self.password = password
         
         self._server: Optional[ThreadingHTTPServer] = None
         self._thread: Optional[threading.Thread] = None
@@ -102,9 +148,13 @@ class WebServer:
         router = self.router
         
         class Handler(WebRequestHandler):
+            def __init__(self):
+                super().__init__()
             pass
-        
+
         Handler.router = router
+        Handler.username = self.username
+        Handler.password = self.password
         return Handler
     
     def _create_server(self) -> ThreadingHTTPServer:
@@ -182,7 +232,9 @@ class WebServer:
 def run_server_in_thread(
     host: str = "127.0.0.1",
     port: int = 8000,
-    router: Optional[Router] = None
+    router: Optional[Router] = None,
+    username: str = "",
+    password: str = ""
 ) -> threading.Thread:
     """
     在后台线程启动 WebUI 服务器
@@ -195,7 +247,7 @@ def run_server_in_thread(
     Returns:
         服务器线程
     """
-    server = WebServer(host=host, port=port, router=router)
+    server = WebServer(host=host, port=port, router=router, username=username, password=password)
     return server.start_background()
 
 
