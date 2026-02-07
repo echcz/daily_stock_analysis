@@ -8,7 +8,7 @@
 #   FastAPI模式: docker-compose -f ./docker/docker-compose.yml up -d server
 #   同时启动: docker-compose -f ./docker/docker-compose.yml up -d analyzer webui
 
-version: '3.8'
+# version: '3.8'
 
 x-common: &common
   build:
@@ -48,9 +48,9 @@ x-common: &common
   deploy:
     resources:
       limits:
-        memory: 512M
+        memory: 2048M
       reservations:
-        memory: 256M
+        memory: 512M
 
 services:
   # WebUI 模式

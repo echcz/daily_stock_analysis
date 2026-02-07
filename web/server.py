@@ -145,14 +145,10 @@ class WebServer:
     
     def _create_handler_class(self) -> Type[WebRequestHandler]:
         """创建带路由器引用的处理器类"""
-        router = self.router
-        
         class Handler(WebRequestHandler):
-            def __init__(self):
-                super().__init__()
             pass
 
-        Handler.router = router
+        Handler.router = self.router
         Handler.username = self.username
         Handler.password = self.password
         return Handler
