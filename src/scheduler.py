@@ -63,7 +63,7 @@ class Scheduler:
     - 优雅退出
     """
     
-    def __init__(self, schedule_time: str = "18:00"):
+    def __init__(self, schedule_time: str = "18:00", workdays_only: bool = False):
         """
         初始化调度器
         
@@ -78,6 +78,7 @@ class Scheduler:
             raise ImportError("请安装 schedule 库: pip install schedule")
         
         self.schedule_time = schedule_time
+        self.workdays_only = workdays_only
         self.shutdown_handler = GracefulShutdown()
         self._task_callback: Optional[Callable] = None
         self._running = False
@@ -104,7 +105,8 @@ class Scheduler:
         """安全执行任务（带异常捕获）"""
         if self._task_callback is None:
             return
-        
+        if self.workdays_only and datetime.now().weekday() >= 5:
+            return
         try:
             logger.info("=" * 50)
             logger.info(f"定时任务开始执行 - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -153,6 +155,7 @@ class Scheduler:
 def run_with_schedule(
     task: Callable,
     schedule_time: str = "18:00",
+    workdays_only: bool = False,
     run_immediately: bool = True
 ):
     """
@@ -163,7 +166,7 @@ def run_with_schedule(
         schedule_time: 每日执行时间
         run_immediately: 是否立即执行一次
     """
-    scheduler = Scheduler(schedule_time=schedule_time)
+    scheduler = Scheduler(schedule_time=schedule_time, workdays_only=workdays_only)
     scheduler.set_daily_task(task, run_immediately=run_immediately)
     scheduler.run()
 

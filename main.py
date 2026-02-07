@@ -480,6 +480,7 @@ def main() -> int:
             run_with_schedule(
                 task=scheduled_task,
                 schedule_time=config.schedule_time,
+                workdays_only=config.schedule_workdays_only,
                 run_immediately=False  # 启动时先执行一次
             )
             return 0
